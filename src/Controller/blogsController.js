@@ -5,12 +5,12 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const blogs = async (req, res) => {
     const { title, body, authorId, category } = req.body
     try {
-        if (!title || !body || !authorId || !category) { return res.status(400).send({ message: "provide mandatory fields" }) }
+        if (!title || !body || !authorId || !category) { return res.status(400).send({ status:false, message: "provide mandatory fields" }) }
         else if (!ObjectId.isValid(authorId)) return res.status(400).send({ message: "author id is not valid" })
         else {
-            if (authorId != req.authorId) return res.status(400).send({ status: false, message: "Provide author id is not valid for creating a blog" })
+            if (authorId != req.authorId) return res.status(400).send({ status: false, message: "Provided author id is not valid for creating a blog" })
             const author = await authorModel.findById(authorId)
-            if (!author) return res.status(400).send({ message: "author invalid/ author not found" })
+            if (!author) return res.status(404).send({ message: "author invalid/ author not found" })
             else {
                 const blog = await blogsModel.create(req.body)
                 res.status(201).send({ status: true, data: blog })
@@ -22,7 +22,7 @@ const blogs = async (req, res) => {
     }
 }
 const getBlogs = async (req, res) => {
-    try {
+    try { 
         const { authorId, category, tag, subcategory } = req.query
         const data = await blogsModel.find({ isDeleted: false, authorId: req.authorId })
         // console.log(data);
@@ -50,7 +50,7 @@ const getBlogs = async (req, res) => {
                 res.status(200).send({ status: true, message: "Blogs List", data: filterBlogs })
             }
             else {
-                res.status(200).send({ status: true, message: "No Blog Found" })
+                res.status(404).send({ status: false, message: "No Blog Found" })
             }
         }
     } catch (error) {
@@ -62,11 +62,11 @@ const update = async function (req, res) {
 
     try {
         let data = req.body
-        if (!req.params.blogId) return res.status(404).send({ message: "Blog Id is not provide" })
+        if (!req.params.blogId) return res.status(400).send({ message: "Blog Id is not provide" })
         else {
             const blogAuthor = await blogsModel.findOne({ _id: req.params.blogId, authorId: req.authorId, isDeleted: false })
-            if (!blogAuthor) return res.status(401).send({ status: false, message: "UnAuthorized Blog" })
-            else if (!ObjectId.isValid(req.params.blogId)) return res.status(404).send("BlogId not valid")
+            if (!blogAuthor) return res.status(401).send({ status: false, message: "UnAuthorized Blog" })//doubt in if condition 
+            else if (!ObjectId.isValid(req.params.blogId)) return res.status(400).send("BlogId not valid")
             else if (!req.body) return res.status(400).send({ message: `didn't provide any data for update` })
             else {
                 let blog = await blogsModel.findOne({ _id: req.params.blogId, isDeleted: false, authorId: req.authorId })
@@ -83,7 +83,7 @@ const update = async function (req, res) {
                 if (!blog) { return res.status(400).send("BlogId is not match") }
                 else {
                     const updateBlog = await blogsModel.findOneAndUpdate({ _id: req.params.blogId, isDeleted: false }, data, { new: true })
-                    res.status(200).send({ status: true, msg: "update successfully", data: updateBlog })
+                    res.status(201).send({ status: true, msg: "update successfully", data: updateBlog })
                 }
             }
         }
@@ -96,7 +96,7 @@ const update = async function (req, res) {
 
 const blogDeleteId = async (req, res) => {
     try {
-        if (!req.params.blogId) return res.status(404).send({ message: "Blog Id is not provide" })
+        if (!req.params.blogId) return res.status(404).send({ message: "Blog Id is not provided" })
         else {
             const blogId = req.params.blogId;
             const findBlog = await blogsModel.findById(blogId)

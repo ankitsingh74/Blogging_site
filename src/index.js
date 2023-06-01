@@ -11,7 +11,7 @@ app.use(express.urlencoded({extended : true}))
 mongoose.connect(MONGOOSE_CONNECTION,{useNewUrlParser: true})
 .then(()=> console.log("MongoDb is connected"))
 .catch(error => console.log(error.message))
-
+ 
 app.use("/" , route)
 
 app.listen(PORT || 3000 , function () {
